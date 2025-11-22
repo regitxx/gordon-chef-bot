@@ -1,0 +1,225 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+body {
+  background: #111;
+  color: #f5f5f5;
+  padding: 1.5rem;
+}
+
+header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+h1 {
+  font-size: 1.9rem;
+  margin-bottom: 0.3rem;
+}
+
+.subtitle {
+  color: #ccc;
+  font-size: 0.95rem;
+}
+
+#settings {
+  margin: 0 auto 1.5rem;
+  max-width: 700px;
+  background: #1b1b1b;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid #333;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  font-size: 0.9rem;
+}
+
+#settings label {
+  flex: 1 1 220px;
+}
+
+#settings input {
+  width: 100%;
+  margin-top: 0.25rem;
+  padding: 0.35rem 0.45rem;
+  border-radius: 0.4rem;
+  border: 1px solid #444;
+  background: #111;
+  color: #f5f5f5;
+}
+
+#saveKeyBtn {
+  padding: 0.4rem 0.8rem;
+  border-radius: 0.5rem;
+  border: none;
+  cursor: pointer;
+  background: #ffb300;
+  color: #111;
+  font-weight: 600;
+}
+
+#keyStatus {
+  font-size: 0.8rem;
+  color: #8bc34a;
+}
+
+main {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+#helper-panel,
+#chat-panel {
+  background: #1b1b1b;
+  border-radius: 0.75rem;
+  padding: 1rem;
+  border: 1px solid #333;
+}
+
+#helper-panel h2 {
+  margin-bottom: 0.75rem;
+}
+
+#helper-panel label {
+  display: block;
+  margin-bottom: 0.7rem;
+  font-size: 0.9rem;
+}
+
+#helper-panel input[type="text"],
+#helper-panel input[type="number"],
+#helper-panel input[type="file"] {
+  width: 100%;
+  margin-top: 0.25rem;
+  padding: 0.4rem 0.45rem;
+  border-radius: 0.4rem;
+  border: 1px solid #444;
+  background: #111;
+  color: #f5f5f5;
+}
+
+.hint {
+  font-size: 0.8rem;
+  color: #aaa;
+  margin-top: 0.5rem;
+}
+
+#chatWindow {
+  height: 420px;
+  overflow-y: auto;
+  border-radius: 0.5rem;
+  border: 1px solid #333;
+  padding: 0.75rem;
+  background: #101010;
+  margin-bottom: 0.75rem;
+}
+
+.message {
+  margin-bottom: 0.7rem;
+  padding: 0.55rem 0.65rem;
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.message.user {
+  background: #263238;
+  text-align: right;
+}
+
+.message.assistant {
+  background: #212121;
+}
+
+.message.system {
+  background: #37474f;
+  font-size: 0.8rem;
+}
+
+.message strong {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-size: 0.8rem;
+  color: #ffb300;
+}
+
+#userInputArea textarea {
+  width: 100%;
+  resize: vertical;
+  min-height: 60px;
+  max-height: 200px;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  border: 1px solid #333;
+  background: #101010;
+  color: #f5f5f5;
+}
+
+.buttons-row {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.55rem;
+}
+
+.buttons-row button {
+  flex: 1;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+#sendBtn {
+  background: #ffb300;
+  color: #111;
+}
+
+#generateImageBtn {
+  background: #424242;
+  color: #f5f5f5;
+}
+
+#dishImageSection {
+  max-width: 700px;
+  margin: 1.5rem auto 0;
+  background: #1b1b1b;
+  border-radius: 0.75rem;
+  padding: 1rem;
+  border: 1px solid #333;
+}
+
+#dishImageSection img {
+  display: block;
+  max-width: 100%;
+  border-radius: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+footer {
+  text-align: center;
+  margin-top: 1.5rem;
+  font-size: 0.75rem;
+  color: #888;
+}
+
+/* mobile */
+@media (max-width: 800px) {
+  main {
+    grid-template-columns: 1fr;
+  }
+
+  #chatWindow {
+    height: 320px;
+  }
+}

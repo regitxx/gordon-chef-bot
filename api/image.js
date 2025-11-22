@@ -1,5 +1,4 @@
 // api/image.js
-import OpenAI from "openai";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -11,26 +10,39 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: "Missing OPENAI_API_KEY on server" });
   }
 
-  const { prompt } = req.body;
-  if (!prompt || typeof prompt !== "string") {
-    return res.status(400).json({ error: "Missing or invalid 'prompt'" });
-  }
-
   try {
-    const client = new OpenAI({ apiKey });
+    const body = req.body || {};
+    const prompt = body.prompt;
 
-    const result = await client.images.generate({
-      model: "gpt-image-1",
-      prompt,
-      n: 1,
-      size: "1024x1024",
+    if (!prompt || typeof prompt !== "string") {
+      return res.status(400).json({ error: "Missing or invalid 'prompt'" });
+    }
+
+    const imageRes = await fetch("https://api.openai.com/v1/images/generations", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model: "gpt-image-1",
+        prompt,
+        n: 1,
+        size: "1024x1024"
+      })
     });
 
-    const imageUrl = result.data?.[0]?.url || null;
+    const data = await imageRes.json();
 
-    res.status(200).json({ imageUrl });
+    if (!imageRes.ok) {
+      console.error("Image API error:", data);
+      return res.status(500).json({ error: "Image API error", details: data });
+    }
+
+    const imageUrl = data.data?.[0]?.url || null;
+    return res.status(200).json({ imageUrl });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Image generation failed" });
+    console.error("Server error (image):", err);
+    return res.status(500).json({ error: "Server error", details: String(err) });
   }
 }

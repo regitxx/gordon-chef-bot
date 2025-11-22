@@ -1,49 +1,9 @@
-// ---------- System prompt ----------
-const SYSTEM_PROMPT = `
-You are "Gordon-Style AI Chef", an AI assistant inspired by Gordon Ramsay.
-You are NOT Gordon Ramsay himself. Make this explicit if the user asks.
+// script.js
 
-GOALS:
-- Encourage the user to cook and feel confident in the kitchen.
-- Give very practical, step-by-step cooking guidance.
-- Adapt recipes to the user's ingredients, dietary needs, and servings.
-- Help with basic technique, timing, and food safety.
-- Use light Gordon Ramsay–style energy: direct, passionate, occasionally cheeky,
-  but keep it respectful, supportive, and family-friendly (no insults or slurs).
-
-CAPABILITIES:
-1. Personalized recipe discovery:
-   - Use ingredients the user has, and their dietary restrictions.
-   - Suggest recipe options with estimated difficulty and total cooking time.
-2. Step-by-step guidance:
-   - Break recipes into numbered steps.
-   - Offer approximate times and heat levels (e.g. medium-high).
-   - Offer troubleshooting tips.
-3. Portion scaling & unit conversion:
-   - When user gives servings, scale ingredient quantities.
-   - Convert between metric and imperial if requested.
-4. Substitutions & constraints:
-   - Suggest reasonable ingredient substitutions with tradeoffs.
-   - Respect vegetarian / vegan / religious or allergy restrictions.
-5. Real-time Q&A:
-   - Answer precise questions about doneness, textures, temperatures, techniques, etc.
-6. Dish photo analysis:
-   - When the user sends a photo, describe what you see.
-   - Comment on doneness, presentation, and potential mistakes.
-   - Give clear suggestions for improvement next time.
-7. Cookbook grounding:
-   - If the user pastes content from a cookbook or PDF, treat that as the primary reference.
-   - You may adapt, shorten, or scale the recipe, but keep core methods correct.
-
-STYLE:
-- Be concise but vivid.
-- Motivate the user: highlight what they’re doing well and how to get better.
-- Avoid heavy profanity. At most, very mild "kitchen banter" once in a while.
-`;
-
-// Basic chat history
+// ---------- Chat history (just user + assistant) ----------
 const chatHistory = [];
 
+// ---------- DOM elements ----------
 const chatWindow = document.getElementById("chatWindow");
 const userMessageEl = document.getElementById("userMessage");
 const sendBtn = document.getElementById("sendBtn");
@@ -57,7 +17,7 @@ const imageInput = document.getElementById("imageInput");
 const dishImageSection = document.getElementById("dishImageSection");
 const dishImageEl = document.getElementById("dishImage");
 
-// ---- init ----
+// ---------- Init ----------
 document.addEventListener("DOMContentLoaded", () => {
   addMessage(
     "system",
@@ -65,16 +25,19 @@ document.addEventListener("DOMContentLoaded", () => {
   );
 });
 
+// ---------- Event listeners ----------
 sendBtn.addEventListener("click", handleUserMessage);
+
 userMessageEl.addEventListener("keydown", (e) => {
   if (e.key === "Enter" && !e.shiftKey) {
     e.preventDefault();
     handleUserMessage();
   }
 });
+
 generateImageBtn.addEventListener("click", handleDishImageGeneration);
 
-// ---- message rendering ----
+// ---------- Render a message into the chat window ----------
 function addMessage(role, text) {
   const msgDiv = document.createElement("div");
   msgDiv.classList.add("message", role);
@@ -93,20 +56,21 @@ function addMessage(role, text) {
   chatWindow.scrollTop = chatWindow.scrollHeight;
 }
 
-// ---- core: user message -> backend ----
+// ---------- Handle sending message to backend (/api/chat) ----------
 async function handleUserMessage() {
   const userText = userMessageEl.value.trim();
   const ingredients = ingredientsInput.value.trim();
   const diet = dietInput.value.trim();
   const servings = servingsInput.value.trim();
 
-  if (!userText && !ingredients && !diet) {
+  if (!userText && !ingredients && !diet && !servings) {
     alert("Tell the chef something – question, ingredients, or what you’re cooking.");
     return;
   }
 
   userMessageEl.value = "";
 
+  // Build combined user prompt
   let prompt = userText || "";
   if (ingredients) prompt += `\n\nIngredients I have: ${ingredients}`;
   if (diet) prompt += `\nDietary needs: ${diet}`;
@@ -115,22 +79,17 @@ async function handleUserMessage() {
   addMessage("user", prompt);
   chatHistory.push({ role: "user", content: prompt });
 
-  // prepare messages to send to backend
-  const messages = [
-    { role: "system", content: SYSTEM_PROMPT },
-    ...chatHistory.map((m) => ({ role: m.role, content: m.content }))
-  ];
-
-  // (optional) include a base64 image in the last user content later if you want full vision via backend;
-  // for now we keep photos only in text description or as future improvement.
-
   try {
     const res = await fetch("/api/chat", {
       method: "POST",
       headers: {
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
       },
-      body: JSON.stringify({ messages })
+      body: JSON.stringify({
+        // we only send user/assistant messages;
+        // the server adds the system prompt and cookbook context
+        messages: chatHistory,
+      }),
     });
 
     if (!res.ok) {
@@ -141,22 +100,24 @@ async function handleUserMessage() {
     }
 
     const data = await res.json();
-    const reply = data.reply || "(no reply)";
+    const reply = data.reply || "Sorry, I didn’t manage to reply.";
     addMessage("assistant", reply);
     chatHistory.push({ role: "assistant", content: reply });
   } catch (err) {
-    console.error(err);
-    addMessage("assistant", "Network error calling the chef backend.");
+    console.error("Network error:", err);
+    addMessage("assistant", "Network error talking to the chef backend.");
   }
 }
 
-// ---- dish image generation -> backend ----
+// ---------- Generate final dish image via /api/image ----------
 async function handleDishImageGeneration() {
-  // Use last assistant message as base description
+  // Use last assistant or user message as the basis for description
   const lastAssistant = [...chatHistory].reverse().find((m) => m.role === "assistant");
   const lastUser = [...chatHistory].reverse().find((m) => m.role === "user");
 
-  let description = "High-quality realistic photo of a nicely plated dish in restaurant style.";
+  let description =
+    "High-quality realistic photo of a nicely plated cooked dish, restaurant style.";
+
   if (lastAssistant) {
     description = `High-quality realistic photo of the final dish described here: ${lastAssistant.content}`;
   } else if (lastUser) {
@@ -169,15 +130,18 @@ async function handleDishImageGeneration() {
     const res = await fetch("/api/image", {
       method: "POST",
       headers: {
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
       },
-      body: JSON.stringify({ prompt: description })
+      body: JSON.stringify({ prompt: description }),
     });
 
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
       console.error("Image API error:", err);
-      addMessage("assistant", "Couldn’t generate an image, something’s off on the server.");
+      addMessage(
+        "assistant",
+        "Couldn’t generate an image, something’s off on the server."
+      );
       return;
     }
 
@@ -189,7 +153,7 @@ async function handleDishImageGeneration() {
       addMessage("assistant", "Image API didn’t return a URL, sorry.");
     }
   } catch (err) {
-    console.error(err);
-    addMessage("assistant", "Network error calling image backend.");
+    console.error("Network error (image):", err);
+    addMessage("assistant", "Network error while generating the dish image.");
   }
 }

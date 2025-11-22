@@ -2,44 +2,85 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Gordon-Style AI Chef</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gordon-Style AI Chef</title>
   <link rel="stylesheet" href="style.css" />
 </head>
+
 <body>
   <div class="app-shell">
+
+    <!-- HEADER -->
     <header>
       <h1>Gordon-Style AI Chef 👨‍🍳</h1>
       <p class="subtitle">
-        AI chef inspired by Gordon Ramsay – here to roast your technique (nicely) and help you cook better.
+        AI chef inspired by Gordon Ramsay – here to roast your technique (nicely)
+        and help you cook better.
       </p>
     </header>
 
+    <!-- MAIN CONTENT -->
     <main>
+
+      <!-- LEFT PANEL (inputs) -->
       <section id="helper-panel" class="panel">
-        <!-- (helper-panel content stays the same) -->
-        ...
+        <h2>Cooking Info</h2>
+
+        <label>
+          Ingredients on hand:
+          <input id="ingredientsInput" type="text" placeholder="e.g. chicken, rice, garlic" />
+        </label>
+
+        <label>
+          Dietary needs:
+          <input id="dietInput" type="text" placeholder="e.g. gluten-free, no dairy" />
+        </label>
+
+        <label>
+          Servings:
+          <input id="servingsInput" type="number" placeholder="2" />
+        </label>
+
+        <label>
+          Upload a picture of your dish (optional):
+          <input id="imageInput" type="file" accept="image/*" />
+        </label>
+
+        <p class="hint">
+          The chef will analyse your picture and tell you what you did well and how to improve.
+        </p>
       </section>
 
+      <!-- RIGHT PANEL (chat UI) -->
       <section id="chat-panel" class="panel">
-        <!-- (chat panel content stays the same) -->
-        ...
+        <div id="chatWindow"></div>
+
+        <div id="userInputArea">
+          <textarea id="userMessage" placeholder="Ask the chef anything… Your ingredients, what you want to cook…"></textarea>
+
+          <div class="buttons-row">
+            <button id="sendBtn">Send</button>
+            <button id="generateImageBtn">Generate Dish Image</button>
+          </div>
+        </div>
       </section>
+
     </main>
 
+    <!-- DISH IMAGE SECTION -->
     <section id="dishImageSection" hidden>
-      <h2>Dish preview</h2>
-      <img id="dishImage" alt="Generated dish preview" />
+      <h2>Dish Preview</h2>
+      <img id="dishImage" src="" alt="Generated Dish" />
     </section>
 
+    <!-- FOOTER -->
     <footer>
-      <p>
-        This is an AI inspired by Gordon Ramsay – not the real chef. For learning &amp; fun only.
-      </p>
+      This is an AI inspired by Gordon Ramsay – not the real chef.  
+      For learning &amp; fun only.
     </footer>
+
   </div>
 
   <script src="script.js"></script>
 </body>
-
 </html>

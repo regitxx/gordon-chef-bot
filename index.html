@@ -9,36 +9,30 @@
 
 <body>
   <div class="app-shell">
-
-    <!-- HEADER -->
     <header>
       <h1>Gordon-Style AI Chef 👨‍🍳</h1>
       <p class="subtitle">
-        AI chef inspired by Gordon Ramsay – here to roast your technique (nicely)
-        and help you cook better.
+        AI chef inspired by Gordon Ramsay – here to roast your technique (nicely) and help you cook better.
       </p>
     </header>
 
-    <!-- MAIN CONTENT -->
     <main>
-
-      <!-- LEFT PANEL (inputs) -->
       <section id="helper-panel" class="panel">
         <h2>Cooking Info</h2>
 
         <label>
           Ingredients on hand:
-          <input id="ingredientsInput" type="text" placeholder="e.g. chicken, rice, garlic" />
+          <input id="ingredientsInput" type="text" placeholder="e.g. chicken, garlic, rice" />
         </label>
 
         <label>
           Dietary needs:
-          <input id="dietInput" type="text" placeholder="e.g. gluten-free, no dairy" />
+          <input id="dietInput" type="text" placeholder="e.g. no dairy, vegetarian, halal" />
         </label>
 
         <label>
           Servings:
-          <input id="servingsInput" type="number" placeholder="2" />
+          <input id="servingsInput" type="number" min="1" placeholder="2" />
         </label>
 
         <label>
@@ -47,38 +41,38 @@
         </label>
 
         <p class="hint">
-          The chef will analyse your picture and tell you what you did well and how to improve.
+          Tip: snap a quick photo and the chef will judge the look – colour, doneness and plating – and tell you how to level it up.
         </p>
       </section>
 
-      <!-- RIGHT PANEL (chat UI) -->
       <section id="chat-panel" class="panel">
         <div id="chatWindow"></div>
 
         <div id="userInputArea">
-          <textarea id="userMessage" placeholder="Ask the chef anything… Your ingredients, what you want to cook…"></textarea>
+          <textarea
+            id="userMessage"
+            rows="3"
+            placeholder="Ask the chef anything… ‘I’ve got chicken and pasta, 2 people, 20 minutes’"
+          ></textarea>
 
           <div class="buttons-row">
-            <button id="sendBtn">Send</button>
-            <button id="generateImageBtn">Generate Dish Image</button>
+            <button id="sendBtn">Ask the Chef</button>
+            <button id="generateImageBtn" title="Generate an example of the final dish">
+              Dish Preview 🖼️
+            </button>
           </div>
         </div>
       </section>
-
     </main>
 
-    <!-- DISH IMAGE SECTION -->
     <section id="dishImageSection" hidden>
       <h2>Dish Preview</h2>
-      <img id="dishImage" src="" alt="Generated Dish" />
+      <img id="dishImage" src="" alt="Generated Dish Preview" />
     </section>
 
-    <!-- FOOTER -->
     <footer>
-      This is an AI inspired by Gordon Ramsay – not the real chef.  
-      For learning &amp; fun only.
+      This is an AI inspired by Gordon Ramsay – not the real chef. For learning &amp; fun only.
     </footer>
-
   </div>
 
   <script src="script.js"></script>

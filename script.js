@@ -1,6 +1,6 @@
 // script.js
 
-// ---------- Chat history (just user + assistant) ----------
+// ---------- Chat history (user + assistant) ----------
 const chatHistory = [];
 
 // ---------- DOM elements ----------
@@ -17,27 +17,7 @@ const imageInput = document.getElementById("imageInput");
 const dishImageSection = document.getElementById("dishImageSection");
 const dishImageEl = document.getElementById("dishImage");
 
-// ---------- Init ----------
-document.addEventListener("DOMContentLoaded", () => {
-  addMessage(
-    "system",
-    "Tell me what you want to cook, what ingredients you have, and how many people you’re feeding. I’ll guide you step by step."
-  );
-});
-
-// ---------- Event listeners ----------
-sendBtn.addEventListener("click", handleUserMessage);
-
-userMessageEl.addEventListener("keydown", (e) => {
-  if (e.key === "Enter" && !e.shiftKey) {
-    e.preventDefault();
-    handleUserMessage();
-  }
-});
-
-generateImageBtn.addEventListener("click", handleDishImageGeneration);
-
-// ---------- Render a message into the chat window ----------
+// ---------- Helpers ----------
 function addMessage(role, text) {
   const msgDiv = document.createElement("div");
   msgDiv.classList.add("message", role);
@@ -56,7 +36,40 @@ function addMessage(role, text) {
   chatWindow.scrollTop = chatWindow.scrollHeight;
 }
 
-// ---------- Handle sending message to backend (/api/chat) ----------
+// Read file as base64 (for future photo analysis)
+function readFileAsBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result || "";
+      const base64 = result.toString().split(",")[1]; // strip data:... prefix
+      resolve(base64);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+// ---------- Init ----------
+document.addEventListener("DOMContentLoaded", () => {
+  addMessage(
+    "system",
+    "Tell me what you want to cook, what ingredients you have, and how many people you’re feeding. I’ll guide you step by step."
+  );
+});
+
+// ---------- Events ----------
+sendBtn.addEventListener("click", () => handleUserMessage());
+userMessageEl.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    handleUserMessage();
+  }
+});
+
+generateImageBtn.addEventListener("click", handleDishImageGeneration);
+
+// ---------- Core: send message to /api/chat ----------
 async function handleUserMessage() {
   const userText = userMessageEl.value.trim();
   const ingredients = ingredientsInput.value.trim();
@@ -70,7 +83,6 @@ async function handleUserMessage() {
 
   userMessageEl.value = "";
 
-  // Build combined user prompt
   let prompt = userText || "";
   if (ingredients) prompt += `\n\nIngredients I have: ${ingredients}`;
   if (diet) prompt += `\nDietary needs: ${diet}`;
@@ -79,6 +91,27 @@ async function handleUserMessage() {
   addMessage("user", prompt);
   chatHistory.push({ role: "user", content: prompt });
 
+  // Optional: dish photo
+  let imageBase64 = null;
+  const file = imageInput.files && imageInput.files[0];
+  if (file) {
+    try {
+      imageBase64 = await readFileAsBase64(file);
+      // clear file input so next time we know it's a new photo
+      imageInput.value = "";
+      addMessage(
+        "system",
+        "Got your photo. I’ll factor how it looks into the feedback."
+      );
+    } catch (err) {
+      console.error("Error reading image:", err);
+      addMessage(
+        "system",
+        "I couldn't read that photo properly, but I’ll still help with the recipe."
+      );
+    }
+  }
+
   try {
     const res = await fetch("/api/chat", {
       method: "POST",
@@ -86,9 +119,8 @@ async function handleUserMessage() {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        // we only send user/assistant messages;
-        // the server adds the system prompt and cookbook context
         messages: chatHistory,
+        imageBase64, // may be null
       }),
     });
 
@@ -111,20 +143,19 @@ async function handleUserMessage() {
 
 // ---------- Generate final dish image via /api/image ----------
 async function handleDishImageGeneration() {
-  // Use last assistant or user message as the basis for description
   const lastAssistant = [...chatHistory].reverse().find((m) => m.role === "assistant");
   const lastUser = [...chatHistory].reverse().find((m) => m.role === "user");
 
   let description =
-    "High-quality realistic photo of a nicely plated cooked dish, restaurant style.";
+    "High-quality realistic photo of a beautifully plated cooked dish on a dark restaurant-style background.";
 
   if (lastAssistant) {
-    description = `High-quality realistic photo of the final dish described here: ${lastAssistant.content}`;
+    description = `High-quality realistic photo of the final dish as described here: ${lastAssistant.content}`;
   } else if (lastUser) {
     description = `High-quality realistic photo of a dish based on this idea: ${lastUser.content}`;
   }
 
-  addMessage("assistant", "Let me plate up a visual for you…");
+  addMessage("assistant", "Right, let me show you how it should look…");
 
   try {
     const res = await fetch("/api/image", {
@@ -140,7 +171,7 @@ async function handleDishImageGeneration() {
       console.error("Image API error:", err);
       addMessage(
         "assistant",
-        "Couldn’t generate an image, something’s off on the server."
+        "Couldn’t generate an image – something’s off on the server or image model."
       );
       return;
     }

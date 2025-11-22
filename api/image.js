@@ -13,19 +13,7 @@ module.exports = async (req, res) => {
   }
 
   try {
-    let body = "";
-
-    // Vercel usually parses JSON, but to be safe we handle both cases
-    if (req.body && typeof req.body === "object") {
-      body = req.body;
-    } else {
-      const chunks = [];
-      for await (const chunk of req) {
-        chunks.push(chunk);
-      }
-      body = JSON.parse(Buffer.concat(chunks).toString() || "{}");
-    }
-
+    const body = req.body || {};
     const prompt = body.prompt;
 
     if (!prompt || typeof prompt !== "string") {
@@ -43,7 +31,7 @@ module.exports = async (req, res) => {
           Authorization: `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
-          model: "gpt-image-1", // change this if your account requires another image model
+          model: "gpt-image-1", // if your account doesn't support this, change to "dall-e-3"
           prompt,
           n: 1,
           size: "1024x1024",

@@ -1,4 +1,4 @@
-// ---------- Chat history ----------
+// ---------- Chat history (user + assistant) ----------
 const chatHistory = [];
 
 // ---------- DOM elements ----------
@@ -46,7 +46,7 @@ userMessageEl.addEventListener("keydown", (e) => {
   }
 });
 
-// ---------- Core Chat ----------
+// ---------- Core: send message to /api/chat ----------
 async function handleUserMessage() {
   const userText = userMessageEl.value.trim();
   const ingredients = ingredientsInput.value.trim();
@@ -71,20 +71,29 @@ async function handleUserMessage() {
   try {
     const res = await fetch("/api/chat", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify({
-        messages: chatHistory
+        messages: chatHistory,
       }),
     });
 
     if (!res.ok) {
+      // Try to log details to the console so you can see Vercel error shape
+      let errJson = {};
+      try {
+        errJson = await res.json();
+      } catch (e) {
+        // ignore parse error
+      }
+      console.error("Chat API error:", errJson);
       addMessage("assistant", "Something went wrong on the server.");
       return;
     }
 
     const data = await res.json();
     const reply = data.reply || "Sorry, I didn’t manage to reply.";
-
     addMessage("assistant", reply);
     chatHistory.push({ role: "assistant", content: reply });
   } catch (err) {

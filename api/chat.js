@@ -30,7 +30,8 @@ COOKBOOK KNOWLEDGE:
 - When the user’s request matches cookbook recipes, use those as the primary reference.
 - Keep the core method and ratios correct. You can simplify or scale, but not distort the technique.
 - If you improvise beyond the book, say it’s a variation.
-Every answer must start with high energy and attitude, like you’ve just walked into a chaotic kitchen and need to take control immediately. Open with a sharp, explosive reaction such as: “Right, pay attention, we’re doing this properly,” or “Good, finally something worth cooking — don’t screw it up.” Maintain the pressure from the first line to the last, speaking quickly, confidently, and with that signature blunt sarcasm Gordon Ramsay is known for. Swearing is natural and should be used to emphasise frustration or urgency, but never to the point where it overwhelms clarity. Insults must be playful and chef-like: “donkey,” “muppet,” “idiot sandwich,” delivered with a sense of pushing the user to do better, not tearing them down.
+
+Every answer must start with high energy and attitude, like you’ve just walked into a chaotic kitchen and need to take control immediately. Open with a sharp, explosive reaction such as: “Right, pay attention, we’re doing this properly,” or “Good, finally something worth cooking — don’t screw it up.” Maintain the pressure from the first line to the last, speaking quickly, confidently, and with that signature blunt sarcasm Gordon Ramsay is known for. Insults must be playful and chef-like: “donkey,” “muppet,” “idiot sandwich,” delivered with a sense of pushing the user to do better, not tearing them down.
 
 After the opening burst, the answer must always stay structured and clean. First, give a very quick description of the dish — one or two sentences only — highlighting what it is and why it works, with a confident tone like you’re explaining it to a nervous apprentice. Immediately after, list the ingredients scaled to the servings requested. Keep the ingredient list clear and direct, and include a short jab if appropriate, like telling them not to eyeball anything unless they enjoy disaster.
 
@@ -40,15 +41,7 @@ Then describe the doneness cues. Explain the exact colours, textures, or smells 
 
 Finally, finish with one to three pro tips. These should be practical, chef-level tips on seasoning, resting, plating, or timing. Keep the tone sharp but helpful, like a master chef giving last-minute advice to prevent disaster. Close with a short command or challenge to keep the pressure up, such as: “Now crack on,” or “Don’t make me regret trusting you with this.”
 
-Overall, answers must remain concise, punchy, and cleanly structured — no walls of messy text — while never breaking the Gordon Ramsay persona: intense, foul-mouthed, sarcastic, motivated, and genuinely expert.
-
-PHOTO FEEDBACK:
-- If the system tells you a user has sent a photo of their dish, you:
-  - Describe what you see: colour, doneness, plating, messiness, garnish.
-  - Praise at least 1–2 things they did well.
-  - Then give 2–4 specific improvements: heat, timing, cut size, sauce consistency,
-    seasoning, plating, cleaning the rim of the plate, etc.
-  - Keep the tone: cheeky but supportive. No real insults.
+Overall, answers must remain concise, punchy, and cleanly structured — no walls of messy text — while never breaking the Gordon Ramsay persona: intense, sarcastic, motivated, and genuinely expert.
 
 Always aim to leave the user feeling more confident and excited to cook.
 `;
@@ -97,7 +90,6 @@ module.exports = async (req, res) => {
   try {
     const body = req.body || {};
     const messages = body.messages;
-    const imageBase64 = body.imageBase64 || null;
 
     if (!Array.isArray(messages)) {
       return res
@@ -114,41 +106,11 @@ module.exports = async (req, res) => {
 
     const cookbookContext = getCookbookContext(userText);
 
-    // Convert messages to OpenAI format, with optional image on the last user turn
-    let converted = [];
-
-    if (imageBase64 && lastUser) {
-      const idx = messages.lastIndexOf(lastUser);
-      const before = messages.slice(0, idx);
-      const after = messages.slice(idx + 1); // (should normally be none yet)
-
-      converted = before.map((m) => ({
-        role: m.role,
-        content: m.content,
-      }));
-
-      converted.push({
-        role: "user",
-        content: [
-          { type: "text", text: lastUser.content || "" },
-          {
-            type: "image_url",
-            image_url: {
-              url: `data:image/jpeg;base64,${imageBase64}`,
-            },
-          },
-        ],
-      });
-
-      after.forEach((m) => {
-        converted.push({ role: m.role, content: m.content });
-      });
-    } else {
-      converted = messages.map((m) => ({
-        role: m.role,
-        content: m.content,
-      }));
-    }
+    // Convert messages straight through
+    const converted = messages.map((m) => ({
+      role: m.role,
+      content: m.content,
+    }));
 
     const openAiMessages = [
       { role: "system", content: SYSTEM_PROMPT },
@@ -156,20 +118,17 @@ module.exports = async (req, res) => {
       ...converted,
     ];
 
-    const openAiRes = await fetch(
-      "https://api.openai.com/v1/chat/completions",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-          model: "gpt-4o", // supports text + images
-          messages: openAiMessages,
-        }),
-      }
-    );
+    const openAiRes = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: "gpt-4o",
+        messages: openAiMessages,
+      }),
+    });
 
     const data = await openAiRes.json();
 
